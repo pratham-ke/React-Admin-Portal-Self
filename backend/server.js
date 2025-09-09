@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 // Security middleware
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = ['http://localhost:5173'];
 app.use(cors({
   origin: function(origin, callback){
     // allow requests with no origin (like mobile apps, curl, etc.)
