@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { createTeamMember, updateTeamMember, fetchTeam, type TeamMember } from "../../store/slices/teamSlice";
+import { createTeamMember, updateTeamMember, fetchTeam } from "../../store/slices/teamSlice";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
 
 const TeamFormPage: React.FC = () => {
@@ -28,7 +28,7 @@ const TeamFormPage: React.FC = () => {
   }, [isEdit, id, items]);
 
   const validate = () => {
-    const e: { name?: string; position?: string } = {};
+    const e: { name?: string; position?: string } = {};``
     if (!form.name.trim()) e.name = "Name is required";
     if (!form.position.trim()) e.position = "Position is required";
     setErrors(e);
@@ -40,7 +40,7 @@ const TeamFormPage: React.FC = () => {
     if (!validate()) return;
     try {
       if (isEdit) {
-        await dispatch(updateTeamMember({ id: Number(id), data: form })).unwrap();
+        await dispatch(updateTeamMember({ id: Number(id), data: { ...form, file: form.file ?? undefined } })).unwrap();
         dispatch(showSuccess("Updated successfully"));
       } else {
         await dispatch(createTeamMember(form as any)).unwrap();

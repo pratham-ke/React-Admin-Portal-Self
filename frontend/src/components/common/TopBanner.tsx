@@ -5,7 +5,9 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 
 const TopBanner: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { message, type, visible } = useAppSelector((state) => state.notification.banner);
+  const { message, type, visible } = useAppSelector(
+    (state) => state.notification.banner
+  );
 
   useEffect(() => {
     if (visible) {
@@ -21,14 +23,14 @@ const TopBanner: React.FC = () => {
   const bgColor = type === "success" ? "bg-[#488010]" : "bg-red-600";
 
   return (
-    <div className={`${bgColor} text-white px-4 py-3 shadow-md relative z-30`}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex-1 text-center font-medium">
-          {message}
-        </div>
+    <div className="relative z-30 mt-4">
+      <div
+        className={`${bgColor} text-white px-4 py-2 shadow-md flex items-center justify-between rounded-lg mx-auto w-fit`}
+      >
+        <div className="text-center font-medium">{message}</div>
         <button
           onClick={() => dispatch(clearNotification())}
-          className="ml-4 p-1 hover:bg-black/20 rounded-full transition-colors"
+          className="ml-2 p-1 hover:bg-black/20 rounded-full transition-colors"
           aria-label="Dismiss notification"
         >
           <XMarkIcon className="w-5 h-5" />

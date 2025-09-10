@@ -29,7 +29,7 @@ function App() {
         <Route
           path="/login"
           element={
-            <PublicRoute>
+            <PublicRoute> 
               <Login />
             </PublicRoute>
           }
@@ -38,7 +38,7 @@ function App() {
         <Route
           path="/forgot-password"
           element={
-            <PublicRoute>
+            <PublicRoute> 
               <ForgotPassword />
             </PublicRoute>
           }

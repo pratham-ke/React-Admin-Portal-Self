@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { HomeIcon, UsersIcon, RectangleGroupIcon, NewspaperIcon, EnvelopeOpenIcon, PowerIcon, UserIcon } from "@heroicons/react/24/outline";
+import {
+  HomeIcon,
+  UsersIcon,
+  RectangleGroupIcon,
+  NewspaperIcon,
+  EnvelopeOpenIcon,
+  PowerIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 import { useAppDispatch } from "../store/hooks";
 import { logout } from "../store/slices/authSlice";
 
@@ -14,9 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setShowConfirm(true);
-  };
+  const handleLogout = () => setShowConfirm(true);
 
   const confirmLogout = () => {
     setShowConfirm(false);
@@ -30,48 +36,88 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
         open ? "w-64" : "w-16"
       } hidden md:flex flex-col`}
     >
-      <div className="h-16 flex items-center justify-between px-4">
-        <span className={`font-semibold text-gray-800 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}>
-          Admin
+      {/* Header with Toggle */}
+      <div className="h-16 flex items-center justify-between px-2">
+        <span className="font-semibold text-[#488010] transition-opacity">
+          {open ? "Admin" : ""}
         </span>
         <button
           type="button"
           onClick={onToggle}
-          className="text-gray-600 hover:text-gray-900"
+          className="p-1 rounded text-[#488010]"
           aria-label="Toggle sidebar"
         >
           {open ? "⟨" : "⟩"}
         </button>
       </div>
+
+      {/* Nav Links */}
       <nav className="flex-1 px-2 py-4 space-y-1">
-        <SidebarLink to="/dashboard" label="Dashboard" open={open} icon={<HomeIcon className="w-5 h-5" />} />
-        <SidebarLink to="/dashboard/team" label="Team" open={open} icon={<UsersIcon className="w-5 h-5" />} />
-        <SidebarLink to="/dashboard/blog" label="Blog" open={open} icon={<NewspaperIcon className="w-5 h-5" />} />
-        <SidebarLink to="/dashboard/portfolio" label="Portfolio" open={open} icon={<RectangleGroupIcon className="w-5 h-5" />} />
-        <SidebarLink to="/dashboard/contact" label="Contact" open={open} icon={<EnvelopeOpenIcon className="w-5 h-5" />} />
-        <SidebarLink to="/dashboard/users" label="Users" open={open} icon={<UserIcon className="w-5 h-5" />} />
+        <SidebarLink to="/dashboard" label="Dashboard" open={open} icon={<HomeIcon className="w-6 h-6" />} />
+        <SidebarLink to="/dashboard/team" label="Team" open={open} icon={<UsersIcon className="w-6 h-6" />} />
+        <SidebarLink to="/dashboard/blog" label="Blog" open={open} icon={<NewspaperIcon className="w-6 h-6" />} />
+        <SidebarLink
+          to="/dashboard/portfolio"
+          label="Portfolio"
+          open={open}
+          icon={<RectangleGroupIcon className="w-6 h-6" />}
+        />
+        <SidebarLink
+          to="/dashboard/contact"
+          label="Contact"
+          open={open}
+          icon={<EnvelopeOpenIcon className="w-6 h-6" />}
+        />
+        <SidebarLink to="/dashboard/users" label="Users" open={open} icon={<UserIcon className="w-6 h-6" />} />
       </nav>
+
+      {/* Logout */}
       <div className="p-2 border-t">
         <button
           type="button"
           onClick={handleLogout}
-          className={`w-full flex items-center gap-3 rounded px-3 py-2 text-sm transition text-gray-700 hover:bg-gray-100 ${open ? "justify-start" : "justify-center"}`}
+          className={`w-full flex items-center gap-3 rounded px-3 py-2 text-sm transition hover:bg-green-50 ${
+            open ? "justify-start" : "justify-center"
+          }`}
+          style={{ color: "#488010" }}
         >
-          <PowerIcon className="w-5 h-5" />
-          <span className={`${open ? "opacity-100" : "opacity-0"} transition-opacity`}>Logout</span>
+          <span className={`${open ? "" : "w-9  items-center justify-right"}`}>
+            <PowerIcon className="w-6 h-6" />
+          </span>
+          <span className={`${open ? "opacity-100" : "opacity-0"} transition-opacity`}>
+            Logout
+          </span>
         </button>
       </div>
 
+      {/* Confirm Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-sm">
             <div className="px-4 py-3 border-b">
-              <h3 className="text-gray-900 font-semibold">Confirm Logout</h3>
+              <h3 className="font-semibold" style={{ color: "#488010" }}>
+                Confirm Logout
+              </h3>
             </div>
-            <div className="p-4 text-gray-700">Are you sure you want to log out?</div>
+            <div className="p-4" style={{ color: "#488010" }}>
+              Are you sure you want to log out?
+            </div>
             <div className="px-4 py-3 border-t flex items-center justify-end gap-2">
-              <button className="px-4 py-2 rounded border" onClick={() => setShowConfirm(false)} type="button">Cancel</button>
-              <button className="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800" onClick={confirmLogout} type="button">Yes, Logout</button>
+              <button
+                className="px-4 py-2 rounded border"
+                onClick={() => setShowConfirm(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded text-white"
+                style={{ backgroundColor: "#488010" }}
+                onClick={confirmLogout}
+                type="button"
+              >
+                Yes, Logout
+              </button>
             </div>
           </div>
         </div>
@@ -80,21 +126,33 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
   );
 };
 
-const SidebarLink: React.FC<{ to: string; label: string; open: boolean; icon?: React.ReactNode }> = ({ to, label, open, icon }) => (
+const SidebarLink: React.FC<{
+  to: string;
+  label: string;
+  open: boolean;
+  icon?: React.ReactNode;
+}> = ({ to, label, open, icon }) => (
   <NavLink
     to={to}
+    title={label}
     className={({ isActive }) =>
-      `flex items-center gap-3 rounded px-3 py-2 text-sm transition ${
-        isActive ? "bg-green-100 text-green-800" : "text-gray-700 hover:bg-gray-100"
+      `flex items-center gap-3 rounded px-3 py-2 text-sm transition text-[#488010] ${
+        isActive ? "bg-green-100" : "hover:bg-green-50"
       }`
     }
     end
   >
-    {icon ?? <span className="w-5 h-5 rounded bg-gray-200" />}
-    <span className={`${open ? "opacity-100" : "opacity-0"} transition-opacity`}>{label}</span>
+    <div className={`${open ? "w-6 h-6" : "w-12 h-10 flex items-center justify-center"}`}>
+      {icon}
+    </div>
+    <span
+      className={`whitespace-nowrap transition-all ${
+        open ? "opacity-100 ml-2" : "opacity-0 w-0"
+      }`}
+    >
+      {label}
+    </span>
   </NavLink>
 );
 
 export default Sidebar;
-
-
