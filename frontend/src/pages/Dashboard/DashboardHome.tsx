@@ -24,7 +24,26 @@ const DashboardHome: React.FC = () => {
           apiClient.get("/contact/submissions"),
           apiClient.get("/users"),
         ]);
-        setCounts({ team: team.data.length, blog: blog.data.length, portfolio: portfolio.data.length, contacts: contacts.data?.length ?? 0, users: users.data.length });
+        // contacts endpoint may return different shapes depending on caller:
+        // - plain array (res.data = [ ... ])
+        // - paginated object { total, submissions: [...] }
+        // - object { total, data: [...] }
+        const getCountFromResponse = (res: any) => {
+          if (!res) return 0;
+          const payload = res.data ?? res;
+          if (Array.isArray(payload)) return payload.length;
+          if (Array.isArray(payload.submissions)) return payload.submissions.length;
+          if (Array.isArray(payload.data)) return payload.data.length;
+          return typeof payload.total === 'number' ? payload.total : 0;
+        };
+
+        setCounts({
+          team: team.data.length,
+          blog: blog.data.length,
+          portfolio: portfolio.data.length,
+          contacts: getCountFromResponse(contacts),
+          users: users.data.length,
+        });
       } catch (e) {
         // ignore count errors to keep dashboard resilient
       }
