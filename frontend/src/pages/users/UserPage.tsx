@@ -18,10 +18,12 @@ const UserPage: React.FC = () => {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
 
   useEffect(() => {
-    dispatch(fetchUsers({ page, limit: pageSize } as any));
-  }, [dispatch, page, pageSize]);
+    dispatch(fetchUsers({ page, limit: pageSize, sortBy: sortBy ?? undefined, sortOrder: sortDir ?? undefined } as any));
+  }, [dispatch, page, pageSize, sortBy, sortDir]);
 
   const onEdit = (id: number) => navigate(`/dashboard/users/edit/${id}`);
   const onView = (id: number) => navigate(`/dashboard/users/view/${id}`);
@@ -62,7 +64,7 @@ const UserPage: React.FC = () => {
 
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
-      <DataTable
+  <DataTable
         columns={[
           { key: "name", title: "Name", sortable: true },
           { key: "email", title: "Email", sortable: true },
@@ -78,11 +80,13 @@ const UserPage: React.FC = () => {
           { key: "createdAt", title: "Created At", sortable: true, render: (u) => u.createdAt ? new Date(u.createdAt).toLocaleString() : "-" },
           { key: "actions", title: "Actions", render: (u) => <div className="text-right"><ActionMenu onView={() => onView(u.id)} onEdit={() => onEdit(u.id)} onDelete={() => onDelete(u.id)} /></div> }
         ] as ColumnConfig[]}
-        rows={visibleItems}
-        pagination={{ page, pageSize, total: (items as any).length ?? 0, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
-        sortable
-        loading={loading}
-  onSortChange={(_key, _dir) => { /* could dispatch fetchUsers with sort params if API supports */ }}
+  rows={visibleItems}
+  pagination={{ page, pageSize, total: (items as any).length ?? 0, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
+  sortable
+  loading={loading}
+  sortBy={sortBy}
+  sortDir={sortDir}
+  onSortChange={(k, d) => { setSortBy(k); setSortDir(d); }}
       />
 
       <ConfirmModal open={confirmOpen} title="Confirm Delete" description="Are you sure you want to delete this user?" confirmText="Yes, Delete" onConfirm={confirmDelete} onCancel={() => setConfirmOpen(false)} />

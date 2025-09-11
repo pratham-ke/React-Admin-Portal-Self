@@ -15,6 +15,8 @@ const PortfolioPage: React.FC = () => {
   const { items, loading, total, error } = useAppSelector((s) => s.portfolio);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
   useEffect(() => { dispatch(fetchPortfolio({ page, limit: pageSize })); }, [dispatch, page, pageSize]);
 
   const onEdit = (item: PortfolioItem) => {
@@ -54,7 +56,7 @@ const PortfolioPage: React.FC = () => {
 
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
-      <DataTable
+  <DataTable
         columns={[
           { key: "image", title: "Image", render: (item) => item.image ? <img src={`http://localhost:5000/uploads/portfolio/${item.image}`} alt={item.name} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
           { key: "name", title: "Name", sortable: true },
@@ -77,11 +79,13 @@ const PortfolioPage: React.FC = () => {
           ) },
           { key: "actions", title: "Actions", render: (item) => <div className="text-right"><ActionMenu onView={() => navigate(`/dashboard/portfolio/view/${item.id}`)} onEdit={() => onEdit(item)} onDelete={() => onDelete(item.id)} /></div> }
         ] as ColumnConfig[]}
-        rows={items}
-        pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
-        sortable
-        loading={loading}
-        onSortChange={() => {}}
+  rows={items}
+  pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
+  sortable
+  loading={loading}
+  sortBy={sortBy}
+  sortDir={sortDir}
+  onSortChange={(k, d) => { setSortBy(k); setSortDir(d); }}
       />
 
   {/* Pagination provided by DataTable footer */}

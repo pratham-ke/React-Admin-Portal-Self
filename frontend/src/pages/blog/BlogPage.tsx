@@ -15,8 +15,10 @@ const BlogPage: React.FC = () => {
   const { items, loading, total, error } = useAppSelector((s) => s.blog);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
 
-  useEffect(() => { dispatch(fetchBlog({ page, limit: pageSize })); }, [dispatch, page, pageSize]);
+  useEffect(() => { dispatch(fetchBlog({ page, limit: pageSize, sortBy: sortBy ?? undefined, sortOrder: sortDir ?? undefined })); }, [dispatch, page, pageSize, sortBy, sortDir]);
 
   const onEdit = (post: BlogPost) => {
     navigate(`/dashboard/blog/edit/${post.id}`);
@@ -54,7 +56,7 @@ const BlogPage: React.FC = () => {
 
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
-      <DataTable
+  <DataTable
         columns={[
           { key: "image", title: "Image", render: (post) => post.image ? <img src={`http://localhost:5000/uploads/blog/${post.image}`} alt={post.title} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
           { key: "title", title: "Title", sortable: true },
@@ -71,11 +73,13 @@ const BlogPage: React.FC = () => {
           { key: "date", title: "Date", sortable: true, render: (post) => post.date ? new Date(post.date).toLocaleDateString() : "" },
           { key: "actions", title: "Actions", render: (post) => <div className="text-right"><ActionMenu onView={() => navigate(`/dashboard/blog/view/${post.id}`)} onEdit={() => onEdit(post)} onDelete={() => onDelete(post.id)} /></div> }
         ] as ColumnConfig[]}
-        rows={items}
-        pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
-        sortable
-        loading={loading}
-        onSortChange={() => {}}
+  rows={items}
+  pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
+  sortable
+  loading={loading}
+  sortBy={sortBy}
+  sortDir={sortDir}
+  onSortChange={(k, d) => { setSortBy(k); setSortDir(d); }}
       />
 
   {/* Pagination provided by DataTable footer */}

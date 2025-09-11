@@ -28,13 +28,21 @@ const initialState: ContactState = {
 
 export const fetchContacts = createAsyncThunk(
   "contacts/fetch",
-  async (params: { page?: number; limit?: number } | undefined, thunkAPI) => {
+  async (params: { page?: number; limit?: number; sortBy?: string; sortOrder?: string } | undefined, thunkAPI) => {
     try {
-      const res = await apiClient.get(`/contact/submissions`, { params: params });
-      // backend returns { total, submissions }
-      const total = res.data.total ?? (Array.isArray(res.data) ? res.data.length : 0);
-      const submissions = res.data.submissions ?? res.data;
-      return { data: submissions, total };
+      const query = params || {};
+      const res = await apiClient.get(`/contact/submissions`, { params: query });
+      // backend may return { data, submissions, total } or plain array
+      const payload = res.data as { data?: any[]; submissions?: any[]; total?: number };
+      const items = Array.isArray(payload.data)
+        ? payload.data
+        : Array.isArray(payload.submissions)
+        ? payload.submissions
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      const total = payload.total ?? items.length;
+      return { data: items, total };
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch contacts");
     }

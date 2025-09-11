@@ -40,12 +40,14 @@ const mapFromApi = (u: any): User => ({
 // Fetch all users
 export const fetchUsers = createAsyncThunk(
   "users/fetchAll",
-  async (_arg: { page?: number; limit?: number } | undefined, thunkAPI) => {
+  async (params: { page?: number; limit?: number; sortBy?: string; sortOrder?: string } | undefined, thunkAPI) => {
     try {
-      const res = await apiClient.get("/users");
-      const raw = Array.isArray(res.data) ? res.data : [];
+      const res = await apiClient.get("/users", { params });
+      const payload = res.data as { data?: any[]; total?: number };
+      const raw = Array.isArray(payload.data) ? payload.data : (Array.isArray(res.data) ? res.data : []);
       const data = raw.map(mapFromApi);
-      return { data, total: data.length };
+      const total = payload.total ?? raw.length;
+      return { data, total };
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch users");
     }

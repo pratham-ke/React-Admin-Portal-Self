@@ -28,11 +28,14 @@ const initialState: PortfolioState = {
 
 export const fetchPortfolio = createAsyncThunk(
   "portfolio/fetch",
-  async (_params: { page?: number; limit?: number } | undefined, thunkAPI) => {
+  async (params: { page?: number; limit?: number; sortBy?: string; sortOrder?: string } | undefined, thunkAPI) => {
     try {
-      const res = await apiClient.get(`/portfolio`, { params: { admin: true } });
-      const items = res.data as PortfolioItem[];
-      return { data: items, total: items.length };
+      const query = { ...(params || {}), admin: true } as any;
+      const res = await apiClient.get(`/portfolio`, { params: query });
+      const payload = res.data as { data?: PortfolioItem[]; total?: number };
+      const items = Array.isArray(payload.data) ? payload.data : (Array.isArray(res.data) ? res.data : []);
+      const total = payload.total ?? items.length;
+      return { data: items, total };
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to load portfolio");
     }

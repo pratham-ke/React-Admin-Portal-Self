@@ -15,14 +15,16 @@ const TeamPage: React.FC = () => {
   const { items, loading, total, error } = useAppSelector((s) => s.team);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
 
 
   
   // form state moved to dedicated Add/Edit pages
 
   useEffect(() => {
-    dispatch(fetchTeam({ page, limit: pageSize }));
-  }, [dispatch, page, pageSize]);
+    dispatch(fetchTeam({ page, limit: pageSize, sortBy: sortBy ?? undefined, sortOrder: sortDir ?? undefined } as any));
+  }, [dispatch, page, pageSize, sortBy, sortDir]);
 
   // no-op: list page no longer contains a form
 
@@ -64,7 +66,7 @@ const TeamPage: React.FC = () => {
 
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
-      <DataTable
+  <DataTable
         columns={[
           { key: "image", title: "Image", render: (m) => m.image ? <img src={`http://localhost:5000/uploads/team/${m.image}`} alt={m.name} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-gray-200" /> },
           { key: "name", title: "Name", sortable: true },
@@ -81,11 +83,13 @@ const TeamPage: React.FC = () => {
           ) },
           { key: "actions", title: "Actions", render: (m) => <div className="text-right"><ActionMenu onView={() => navigate(`/dashboard/team/view/${m.id}`)} onEdit={() => onEdit(m)} onDelete={() => onDelete(m.id)} /></div> }
         ] as ColumnConfig[]}
-        rows={items}
-        pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
-        sortable
-        loading={loading}
-        onSortChange={(_k, _d) => { /* parent could dispatch fetchTeam with sort params if backend supports it */ }}
+  rows={items}
+  pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
+  sortable
+  loading={loading}
+  sortBy={sortBy}
+  sortDir={sortDir}
+  onSortChange={(k, d) => { setSortBy(k); setSortDir(d); }}
       />
 
       <ConfirmModal open={confirmOpen} title="Confirm Delete" description="Are you sure you want to delete this team member?" confirmText="Yes, Delete" onConfirm={confirmDelete} onCancel={() => setConfirmOpen(false)} />

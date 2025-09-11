@@ -22,6 +22,9 @@ type Props = {
   pagination?: Pagination;
   sortable?: boolean;
   loading?: boolean;
+  // controlled sort state (optional) - parent can pass these to keep DataTable in sync
+  sortBy?: string | null;
+  sortDir?: "asc" | "desc" | null;
   onSortChange?: (key: string, direction: "asc" | "desc") => void;
 };
 
@@ -33,18 +36,65 @@ const SortIcon: React.FC<{ dir?: "asc" | "desc" | undefined }> = ({ dir }) => (
   </span>
 );
 
-const DataTable: React.FC<Props> = ({ columns, rows, pagination, sortable, loading, onSortChange }) => {
-  const [sortKey, setSortKey] = React.useState<string | null>(null);
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc" | null>(null);
+const DataTable: React.FC<Props> = ({ columns, rows, pagination, sortable, loading, sortBy, sortDir, onSortChange }) => {
+  const [sortKey, setSortKey] = React.useState<string | null>(sortBy ?? null);
+  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc" | null>(sortDir ?? null);
+
+  // if parent provides controlled sort state, keep internal state synced
+  React.useEffect(() => {
+    setSortKey(sortBy ?? null);
+  }, [sortBy]);
+  React.useEffect(() => {
+    setSortDirection(sortDir ?? null);
+  }, [sortDir]);
 
   const handleHeaderClick = (col: ColumnConfig) => {
     if (!sortable || !col.sortable) return;
     let nextDir: "asc" | "desc" = "asc";
-    if (sortKey === col.key && sortDir === "asc") nextDir = "desc";
+    if (sortKey === col.key && sortDirection === "asc") nextDir = "desc";
     setSortKey(col.key);
-    setSortDir(nextDir);
+    setSortDirection(nextDir);
     onSortChange?.(col.key, nextDir);
   };
+
+  // Client-side sorted rows fallback so clicking headers gives immediate feedback
+  const sortedRows = React.useMemo(() => {
+    if (!sortKey || !sortDirection) return rows;
+    const colKey = sortKey;
+
+    const getValue = (r: any) => {
+      // prefer direct property
+      if (r == null) return "";
+      if (r[colKey] !== undefined && r[colKey] !== null) return r[colKey];
+      // common fallback: name composed of firstName/lastName
+      if ((colKey === "name" || colKey.toLowerCase().includes("name")) && (r.firstName || r.lastName)) {
+        return `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim();
+      }
+      // try some date fields
+      if (colKey.toLowerCase().includes("date") && (r.date || r.createdAt || r.submittedAt)) return r.date ?? r.createdAt ?? r.submittedAt;
+      // last resort: stringify the row field if present
+      if (r[colKey] !== undefined) return r[colKey];
+      return "";
+    };
+
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+    const sorted = [...rows].sort((a, b) => {
+      const va = getValue(a);
+      const vb = getValue(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return sortDirection === "asc" ? -1 : 1;
+      if (vb == null) return sortDirection === "asc" ? 1 : -1;
+      // compare numbers
+      if (typeof va === "number" && typeof vb === "number") return sortDirection === "asc" ? va - vb : vb - va;
+      // try date comparison
+      const da = Date.parse(String(va));
+      const db = Date.parse(String(vb));
+      if (!isNaN(da) && !isNaN(db)) return sortDirection === "asc" ? da - db : db - da;
+      // fallback to string compare
+      return sortDirection === "asc" ? collator.compare(String(va), String(vb)) : collator.compare(String(vb), String(va));
+    });
+    return sorted;
+  }, [rows, sortKey, sortDirection]);
 
   return (
     <div className="overflow-x-auto bg-white border border-gray-200 rounded">
@@ -55,14 +105,14 @@ const DataTable: React.FC<Props> = ({ columns, rows, pagination, sortable, loadi
               <th key={col.key} className={`px-4 py-2 ${col.width ?? ""} cursor-pointer`} onClick={() => handleHeaderClick(col)}>
                 <div className="flex items-center">
                   <span>{col.title}</span>
-                  {col.sortable && <SortIcon dir={sortKey === col.key ? (sortDir ?? undefined) as any : undefined} />}
+                  {col.sortable && <SortIcon dir={sortKey === col.key ? (sortDirection ?? undefined) as any : undefined} />}
                 </div>
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((r: any, idx: number) => (
+          {sortedRows.map((r: any, idx: number) => (
             <tr key={r.id ?? idx} className="border-t">
               {columns.map((col) => (
                 <td key={col.key} className="px-4 py-2 align-top">

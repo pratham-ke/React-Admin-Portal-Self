@@ -32,11 +32,14 @@ const initialState: BlogState = {
 
 export const fetchBlog = createAsyncThunk(
   "blog/fetch",
-  async (_params: { page?: number; limit?: number } | undefined, thunkAPI) => {
+  async (params: { page?: number; limit?: number; sortBy?: string; sortOrder?: string } | undefined, thunkAPI) => {
     try {
-      const res = await apiClient.get(`/blog`, { params: { admin: true } });
-      const items = res.data as BlogPost[];
-      return { data: items, total: items.length };
+      const query = { ...(params || {}), admin: true } as any;
+      const res = await apiClient.get(`/blog`, { params: query });
+      const payload = res.data as { data?: BlogPost[]; total?: number };
+      const items = Array.isArray(payload.data) ? payload.data : (Array.isArray(res.data) ? res.data : []);
+      const total = payload.total ?? items.length;
+      return { data: items, total };
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to load blog posts");
     }
