@@ -5,6 +5,7 @@ import teamReducer from "./slices/teamSlice";
 import portfolioReducer from "./slices/portfolioSlice";
 import blogReducer from "./slices/blogSlice";
 import notificationReducer from "./slices/notificationSlice";
+import userReducer from "./slices/userSlice"; 
 import { setLogoutHandler } from "../services/apiClient";
 
 export const store = configureStore({
@@ -14,6 +15,7 @@ export const store = configureStore({
     portfolio: portfolioReducer,
     blog: blogReducer,
     notification: notificationReducer,
+    users: userReducer, 
   },
 });
 

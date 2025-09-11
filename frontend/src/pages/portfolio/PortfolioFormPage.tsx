@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { createPortfolioItem, updatePortfolioItem, fetchPortfolio, type PortfolioItem } from "../../store/slices/portfolioSlice";
+import { createPortfolioItem, updatePortfolioItem, fetchPortfolio } from "../../store/slices/portfolioSlice";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
 
 const PortfolioFormPage: React.FC = () => {
@@ -57,7 +57,12 @@ const PortfolioFormPage: React.FC = () => {
     if (!validate()) return;
     try {
       if (isEdit) {
-        await dispatch(updatePortfolioItem({ id: Number(id), data: form })).unwrap();
+        await dispatch(
+          updatePortfolioItem({
+            id: Number(id),
+            data: { ...form, file: form.file ?? undefined }
+          })
+        ).unwrap();
         dispatch(showSuccess("Updated successfully"));
       } else {
         await dispatch(createPortfolioItem(form as any)).unwrap();
