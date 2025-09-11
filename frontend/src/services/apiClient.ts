@@ -1,5 +1,5 @@
 // src/services/apiClient.ts
-import axios, { type AxiosInstance, type AxiosRequestConfig, AxiosError } from "axios";
+import axios, { type AxiosInstance, AxiosError } from "axios";
 
 /**
  * logout handler type:

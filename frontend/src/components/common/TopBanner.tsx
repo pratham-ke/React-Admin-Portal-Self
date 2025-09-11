@@ -23,9 +23,9 @@ const TopBanner: React.FC = () => {
   const bgColor = type === "success" ? "bg-[#488010]" : "bg-red-600";
 
   return (
-    <div className="relative z-30 mt-4">
+    <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
       <div
-        className={`${bgColor} text-white px-4 py-2 shadow-md flex items-center justify-between rounded-lg mx-auto w-fit`}
+        className={`${bgColor} text-white px-4 py-2 shadow-md flex items-center justify-between rounded-lg w-fit`}
       >
         <div className="text-center font-medium">{message}</div>
         <button

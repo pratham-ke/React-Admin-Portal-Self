@@ -16,6 +16,7 @@ interface UserState {
   currentUser: User | null;
   loading: boolean;
   error: string | null;
+  total: number;
 }
 
 const initialState: UserState = {
@@ -23,6 +24,7 @@ const initialState: UserState = {
   currentUser: null,
   loading: false,
   error: null,
+  total: 0,
 };
 
 // Helper: map backend user -> frontend User
@@ -38,11 +40,12 @@ const mapFromApi = (u: any): User => ({
 // Fetch all users
 export const fetchUsers = createAsyncThunk(
   "users/fetchAll",
-  async (_arg, thunkAPI) => {
+  async (_arg: { page?: number; limit?: number } | undefined, thunkAPI) => {
     try {
       const res = await apiClient.get("/users");
-      const data = Array.isArray(res.data) ? res.data.map(mapFromApi) : [];
-      return data;
+      const raw = Array.isArray(res.data) ? res.data : [];
+      const data = raw.map(mapFromApi);
+      return { data, total: data.length };
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch users");
     }
@@ -134,8 +137,9 @@ const userSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsers.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
-        state.items = action.payload;
+      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<{ data: User[]; total: number }>) => {
+        state.items = action.payload.data;
+        state.total = action.payload.total ?? action.payload.data.length;
         state.loading = false;
       })
       .addCase(fetchUsers.rejected, (state, action) => {

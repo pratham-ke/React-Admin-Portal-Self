@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { createBlogPost, updateBlogPost, fetchBlog, type BlogPost } from "../../store/slices/blogSlice";
+import { createBlogPost, updateBlogPost, fetchBlog } from "../../store/slices/blogSlice";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
 
 const BlogFormPage: React.FC = () => {
@@ -20,7 +20,7 @@ const BlogFormPage: React.FC = () => {
     status: string; 
     date: string; 
     tags: string; 
-    file?: File | null 
+    file?: File 
   }>({ 
     title: "", 
     description: "", 
@@ -30,7 +30,7 @@ const BlogFormPage: React.FC = () => {
     status: "draft", 
     date: new Date().toISOString().split('T')[0], 
     tags: "", 
-    file: null 
+    file: undefined 
   });
   const [errors, setErrors] = useState<{ title?: string; content?: string }>({});
 
@@ -51,7 +51,7 @@ const BlogFormPage: React.FC = () => {
           status: post.status ?? "draft", 
           date: post.date ? new Date(post.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0], 
           tags: post.tags ? post.tags.join(', ') : "", 
-          file: null 
+          file: undefined 
         });
       }
     }
@@ -104,7 +104,7 @@ const BlogFormPage: React.FC = () => {
               </div>
               <div className="mt-3">
                 <label className="block text-sm text-gray-700 mb-1">Upload Image</label>
-                <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))} />
+                <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] }))} />
               </div>
             </div>
             <div>
