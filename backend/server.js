@@ -12,10 +12,12 @@ dotenv.config();
 const app = express();
 
 // Security middleware
-const allowedOrigins = ['http://localhost:5173'];
+// Allow origins defined by FRONTEND_URL (set via env) and common dev hosts
+const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [frontendOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000'];
 app.use(cors({
   origin: function(origin, callback){
-    // allow requests with no origin (like mobile apps, curl, etc.)
+    // allow requests with no origin (like mobile apps, curl, server-to-server)
     if(!origin) return callback(null, true);
     if(allowedOrigins.indexOf(origin) === -1){
       var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
@@ -29,8 +31,6 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === 'development') {
@@ -80,6 +80,7 @@ app.use(errorHandler);
 
 // Database sync and server start
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 const startServer = async () => {
   try {
@@ -88,10 +89,10 @@ const startServer = async () => {
     console.log('✅ Database synced successfully');
 
     // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 Server is running on ${HOST}:${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`🔗 Health check: http://${process.env.HOST || 'localhost'}:${PORT}/api/health`);
     });
   } catch (error) {
     console.error('❌ Unable to start server:', error);
