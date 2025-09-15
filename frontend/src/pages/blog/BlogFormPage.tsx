@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { createBlogPost, updateBlogPost, fetchBlog } from "../../store/slices/blogSlice";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
+import ImageUploader from "../../components/common/ImageUploader";
+import RichTextEditor from "../../components/common/RichTextEditor";
 
 const BlogFormPage: React.FC = () => {
   const { id } = useParams();
@@ -99,13 +101,7 @@ const BlogFormPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <div className="w-40 h-40 rounded bg-gray-100 overflow-hidden">
-                {/* image preview */}
-              </div>
-              <div className="mt-3">
-                <label className="block text-sm text-gray-700 mb-1">Upload Image</label>
-                <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] }))} />
-              </div>
+              <ImageUploader initialFile={form.file} initialUrl={undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? undefined }))} />
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Title *</label>
@@ -178,11 +174,7 @@ const BlogFormPage: React.FC = () => {
         </div>
         <div>
           <label className="block text-sm text-gray-700 mb-1">Content *</label>
-          <textarea 
-            className={`w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 ${errors.content ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-700"} min-h-[300px]`} 
-            value={form.content} 
-            onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} 
-          />
+          <RichTextEditor value={form.content} onChange={(v) => setForm((f) => ({ ...f, content: v }))} />
           {errors.content && <p className="text-xs text-red-600 mt-1">{errors.content}</p>}
         </div>
       </form>

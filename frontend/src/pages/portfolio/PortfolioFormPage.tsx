@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { createPortfolioItem, updatePortfolioItem, fetchPortfolio } from "../../store/slices/portfolioSlice";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
+import ImageUploader from "../../components/common/ImageUploader";
+import RichTextEditor from "../../components/common/RichTextEditor";
 
 const PortfolioFormPage: React.FC = () => {
   const { id } = useParams();
@@ -87,13 +89,7 @@ const PortfolioFormPage: React.FC = () => {
       <form id="portfolioForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
-            <div className="w-40 h-40 rounded bg-gray-100 overflow-hidden">
-              {/* image preview */}
-            </div>
-            <div className="mt-3">
-              <label className="block text-sm text-gray-700 mb-1">Upload Image</label>
-              <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))} />
-            </div>
+            <ImageUploader initialFile={form.file ?? null} initialUrl={undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? null }))} />
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Name *</label>
@@ -108,11 +104,7 @@ const PortfolioFormPage: React.FC = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-700 mb-1">Description</label>
-            <textarea 
-              className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700 min-h-[120px]" 
-              value={form.description} 
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} 
-            />
+            <RichTextEditor value={form.description} onChange={(v) => setForm((f) => ({ ...f, description: v }))} />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Status</span>

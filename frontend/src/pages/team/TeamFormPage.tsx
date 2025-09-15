@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { createTeamMember, updateTeamMember, fetchTeam } from "../../store/slices/teamSlice";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
+import ImageUploader from "../../components/common/ImageUploader";
+import RichTextEditor from "../../components/common/RichTextEditor";
 
 const TeamFormPage: React.FC = () => {
   const { id } = useParams();
@@ -64,15 +66,15 @@ const TeamFormPage: React.FC = () => {
 
       <form id="teamForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div>
-            <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden">
-              {/* image preview */}
+            <div>
+              <ImageUploader
+                initialFile={form.file ?? null}
+                initialUrl={undefined}
+                onFileChange={(f) => setForm((s) => ({ ...s, file: f }))}
+                label="Upload Picture"
+                rounded
+              />
             </div>
-            <div className="mt-3">
-              <label className="block text-sm text-gray-700 mb-1">Upload Picture</label>
-              <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))} />
-            </div>
-          </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Name *</label>
             <input className={`w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 ${errors.name ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-700"}`} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
@@ -80,7 +82,15 @@ const TeamFormPage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Position *</label>
-            <input className={`w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 ${errors.position ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-700"}`} value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))} />
+            <select className={`w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 ${errors.position ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-700"}`} value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))}>
+              <option value="">Select Position</option>
+              <option value="Web Dev">Web Dev</option>
+              <option value="QA">QA</option>
+              <option value="TL">TL</option>
+              <option value="Designer">Designer</option>
+              <option value="HR">HR</option>
+              <option value="Project Manager">Project Manager</option>
+            </select>
             {errors.position && <p className="text-xs text-red-600 mt-1">{errors.position}</p>}
           </div>
           <div>
@@ -93,10 +103,10 @@ const TeamFormPage: React.FC = () => {
           </div>
         </div>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">Biography</label>
-            <textarea className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700 min-h-[220px]" value={form.biography} onChange={(e) => setForm((f) => ({ ...f, biography: e.target.value }))} />
-          </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Biography</label>
+              <RichTextEditor value={form.biography ?? ""} onChange={(v) => setForm((f) => ({ ...f, biography: v }))} placeholder="Write biography here" />
+            </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Status</span>
             <label className="inline-flex items-center cursor-pointer">
