@@ -7,6 +7,7 @@ export interface BlogPost {
   description?: string;
   content: string;
   image?: string; // server-stored filename
+  imageUrl?: string;
   category?: string;
   author?: string;
   date?: string;

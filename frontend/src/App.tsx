@@ -7,6 +7,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Dashboard layout
 import DashboardLayout from "./pages/DashboardLayout";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 // Route guards
 import PrivateRoute from "./routes/PrivateRoute";
@@ -69,7 +70,9 @@ function App() {
         path="/dashboard"
         element={
           <PrivateRoute>
-            <DashboardLayout />
+            <ErrorBoundary>
+              <DashboardLayout />
+            </ErrorBoundary>
           </PrivateRoute>
         }
       >

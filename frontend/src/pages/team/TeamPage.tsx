@@ -68,7 +68,7 @@ const TeamPage: React.FC = () => {
 
   <DataTable
         columns={[
-          { key: "image", title: "Image", render: (m) => m.image ? <img src={`http://localhost:5000/uploads/team/${m.image}`} alt={m.name} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-gray-200" /> },
+          { key: "image", title: "Image", render: (m) => m.imageUrl || m.image ? <img src={m.imageUrl ?? `http://localhost:5000/uploads/team/${m.image}`} alt={m.name} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-gray-200" /> },
           { key: "name", title: "Name", sortable: true },
           { key: "position", title: "Position", sortable: true },
           { key: "email", title: "Email", sortable: true },
@@ -81,9 +81,11 @@ const TeamPage: React.FC = () => {
               </span>
             </label>
           ) },
+          // add invisible helper column to set row class based on status
+          { key: "__rowClass", title: "", render: (_m) => null },
           { key: "actions", title: "Actions", render: (m) => <div className="text-right"><ActionMenu onView={() => navigate(`/dashboard/team/view/${m.id}`)} onEdit={() => onEdit(m)} onDelete={() => onDelete(m.id)} /></div> }
         ] as ColumnConfig[]}
-  rows={items}
+  rows={items.map((it) => ({ ...it, __rowClass: ((it.status ?? "active") === "active") ? "" : "opacity-50" }))}
   pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
   sortable
   loading={loading}

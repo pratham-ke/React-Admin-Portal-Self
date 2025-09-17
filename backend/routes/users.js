@@ -5,6 +5,7 @@ const { auth, adminAuth } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 const multer = require('multer');
+const sanitizeHtml = require('sanitize-html');
 const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -18,7 +19,13 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
+  // allow only jpg/jpeg/png
+  const allowedExt = ['.jpg', '.jpeg', '.png'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!allowedExt.includes(ext)) return cb(new Error('Only JPG/JPEG/PNG image files are allowed'));
+  cb(null, true);
+} });
 
 // Helper function to clean empty strings (only for optional fields)
 const cleanEmptyStrings = (data) => {
@@ -39,7 +46,13 @@ router.get('/', auth, adminAuth, async (req, res) => {
       attributes: { exclude: ['password'] },
       where: { deleted_at: null },
     });
-    res.json(users);
+    // attach full image URLs when possible
+    const result = users.map((u) => {
+      const j = u.toJSON();
+      if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${j.image}`;
+      return j;
+    });
+    res.json(result);
   } catch (error) {
     res.status(500).json({
       message: 'Error fetching users',
@@ -57,7 +70,9 @@ router.get('/:id', auth, adminAuth, async (req, res) => {
     if (!user || user.deleted_at) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+    const j = user.toJSON();
+    if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${j.image}`;
+    res.json(j);
   } catch (error) {
     res.status(500).json({
       message: 'Error fetching user',
@@ -69,7 +84,7 @@ router.get('/:id', auth, adminAuth, async (req, res) => {
 // Create new user (admin only)
 router.post('/', auth, adminAuth, upload.single('image'), async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+  const { username, email, password, confirmPassword, role } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -84,20 +99,39 @@ router.post('/', auth, adminAuth, upload.single('image'), async (req, res) => {
       });
     }
 
+    // Validate password and confirmPassword
+    const pwd = password || '';
+    const confirm = confirmPassword || '';
+    const pwdRe = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&!^*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+    if (!pwdRe.test(pwd)) {
+      return res.status(400).json({ message: 'Password must be 8+ characters and include uppercase, lowercase, digit and special character' });
+    }
+    if (pwd !== confirm) {
+      return res.status(400).json({ message: 'Password and confirm password do not match' });
+    }
+
     // Create new user
+    // sanitize username/email
     const userData = {
-      username,
-      email,
-      password,
+      username: sanitizeHtml(username || ''),
+      email: sanitizeHtml(email || ''),
+      password: pwd,
       role: role || 'user',
     };
     if (req.file) {
       userData.image = req.file.filename;
     }
+    // Hash password before storing
+    if (userData.password) {
+      const salt = await bcrypt.genSalt(10);
+      userData.password = await bcrypt.hash(userData.password, salt);
+    }
     const user = await User.create(userData);
 
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = user.toJSON();
+    // Return user without password and include imageUrl
+    const created = user.toJSON();
+    if (created.image) created.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${created.image}`;
+    const { password: _, ...userWithoutPassword } = created;
     res.status(201).json(userWithoutPassword);
   } catch (error) {
     res.status(500).json({
@@ -111,7 +145,7 @@ router.post('/', auth, adminAuth, upload.single('image'), async (req, res) => {
 router.put('/:id', auth, adminAuth, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, role } = req.body;
+  const { username, email, role, password, confirmPassword } = req.body;
 
     const user = await User.findByPk(id);
     if (!user) {
@@ -135,14 +169,30 @@ router.put('/:id', auth, adminAuth, upload.single('image'), async (req, res) => 
     }
 
     // Update user
-    let updateData = { username, email, role };
+    let updateData = { username: sanitizeHtml(username || ''), email: sanitizeHtml(email || ''), role };
     if (req.file) {
       updateData.image = req.file.filename;
     }
+    // If password provided, validate & hash
+    if (password) {
+      const pwd = password || '';
+      const confirm = confirmPassword || '';
+      const pwdRe = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&!^*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+      if (!pwdRe.test(pwd)) {
+        return res.status(400).json({ message: 'Password must be 8+ characters and include uppercase, lowercase, digit and special character' });
+      }
+      if (pwd !== confirm) {
+        return res.status(400).json({ message: 'Password and confirm password do not match' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(pwd, salt);
+    }
     await user.update(updateData);
 
-    // Return updated user without password
-    const { password: _, ...userWithoutPassword } = user.toJSON();
+    // Return updated user without password and include imageUrl
+    const updated = user.toJSON();
+    if (updated.image) updated.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${updated.image}`;
+    const { password: _, ...userWithoutPassword } = updated;
     res.json(userWithoutPassword);
   } catch (error) {
     res.status(500).json({

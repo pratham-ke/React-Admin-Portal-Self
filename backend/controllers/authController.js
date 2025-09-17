@@ -70,12 +70,11 @@ const signup = async (req, res) => {
       success: true,
       message: 'User registered successfully',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
+      user: (function(){
+        const u = user.toJSON();
+        if (u.image) u.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${u.image}`;
+        return { id: u.id, username: u.username, email: u.email, role: u.role, imageUrl: u.imageUrl };
+      })(),
     });
   } catch (error) {
     // Log and handle errors
@@ -163,12 +162,11 @@ const login = async (req, res) => {
       success: true,
       message: 'Login successful',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
+      user: (function(){
+        const u = user.toJSON();
+        if (u.image) u.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${u.image}`;
+        return { id: u.id, username: u.username, email: u.email, role: u.role, imageUrl: u.imageUrl };
+      })(),
     });
   } catch (error) {
     // Log and handle errors
@@ -202,9 +200,11 @@ const getCurrentUser = async (req, res) => {
     }
 
     // Respond with user info
+    const u = user.toJSON();
+    if (u.image) u.imageUrl = `${req.protocol}://${req.get('host')}/uploads/user/${u.image}`;
     res.json({
       success: true,
-      user
+      user: u
     });
   } catch (error) {
     // Log and handle errors

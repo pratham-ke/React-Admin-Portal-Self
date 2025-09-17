@@ -4,6 +4,7 @@ const { Portfolio } = require('../models');
 const { auth, adminAuth } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const sanitizeHtml = require('sanitize-html');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -14,7 +15,12 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
+  const allowed = /jpeg|jpg|png|gif/;
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!allowed.test(ext)) return cb(new Error('Only image files are allowed'));
+  cb(null, true);
+} });
 
 // Helper function to clean empty strings
 const cleanEmptyStrings = (data) => {
@@ -39,7 +45,12 @@ router.get('/', require('../middleware/auth').authOptional, async (req, res) => 
       where,
       order: [['createdAt', 'DESC']],
     });
-    res.json(portfolio);
+    const result = portfolio.map((p) => {
+      const j = p.toJSON();
+      if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/portfolio/${j.image}`;
+      return j;
+    });
+    res.json(result);
   } catch (error) {
     res.status(500).json({
       message: 'Error fetching portfolio items',
@@ -55,7 +66,9 @@ router.get('/:id', async (req, res) => {
     if (!item) {
       return res.status(404).json({ message: 'Portfolio item not found' });
     }
-    res.json(item);
+    const j = item.toJSON();
+    if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/portfolio/${j.image}`;
+    res.json(j);
   } catch (error) {
     res.status(500).json({
       message: 'Error fetching portfolio item',
@@ -68,6 +81,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     let itemData = cleanEmptyStrings(req.body);
+    if (itemData.description) itemData.description = sanitizeHtml(itemData.description, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1','h2','h3','img','table','thead','tbody','tr','td']), allowedAttributes: { '*': ['href','align','alt','style','src'] } });
     if (req.file) {
       itemData.image = req.file.filename;
     }
@@ -76,7 +90,9 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: 'Name is required.' });
     }
     const item = await Portfolio.create(itemData);
-    res.status(201).json(item);
+    const created = item.toJSON();
+    if (created.image) created.imageUrl = `${req.protocol}://${req.get('host')}/uploads/portfolio/${created.image}`;
+    res.status(201).json(created);
   } catch (error) {
     res.status(500).json({
       message: 'Error creating portfolio item',
@@ -93,11 +109,14 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
       return res.status(404).json({ message: 'Portfolio item not found' });
     }
     let updateData = cleanEmptyStrings(req.body);
+    if (updateData.description) updateData.description = sanitizeHtml(updateData.description, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1','h2','h3','img','table','thead','tbody','tr','td']), allowedAttributes: { '*': ['href','align','alt','style','src'] } });
     if (req.file) {
       updateData.image = req.file.filename;
     }
     await item.update(updateData);
-    res.json(item);
+    const updated = item.toJSON();
+    if (updated.image) updated.imageUrl = `${req.protocol}://${req.get('host')}/uploads/portfolio/${updated.image}`;
+    res.json(updated);
   } catch (error) {
     res.status(500).json({
       message: 'Error updating portfolio item',

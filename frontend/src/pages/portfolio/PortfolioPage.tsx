@@ -58,7 +58,7 @@ const PortfolioPage: React.FC = () => {
 
   <DataTable
         columns={[
-          { key: "image", title: "Image", render: (item) => item.image ? <img src={`http://localhost:5000/uploads/portfolio/${item.image}`} alt={item.name} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
+          { key: "image", title: "Image", render: (item) => item.imageUrl || item.image ? <img src={item.imageUrl ?? `http://localhost:5000/uploads/portfolio/${item.image}`} alt={item.name} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
           { key: "name", title: "Name", sortable: true },
           { key: "description", title: "Description", render: (item) => <div className="max-w-xs truncate">{item.description ?? ""}</div> },
           { key: "status", title: "Status", render: (item) => (

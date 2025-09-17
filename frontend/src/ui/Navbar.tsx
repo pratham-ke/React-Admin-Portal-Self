@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "../store/hooks";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -8,6 +9,9 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
+  const authUser = useAppSelector((s) => s.auth.user);
+  const usersCurrent = useAppSelector((s) => s.users.currentUser);
+  const user = authUser || usersCurrent;
 
   return (
     <header
@@ -32,9 +36,13 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"
+          className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden"
         >
-          👤
+          {user?.imageUrl || user?.image ? (
+            <img src={user.imageUrl ?? `http://localhost:5000/uploads/user/${user.image}`} alt="profile" className="w-8 h-8 object-cover rounded-full" />
+          ) : (
+            <span className="text-xl">&#128100;</span>
+          )}
         </button>
         {open && (
           <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow">

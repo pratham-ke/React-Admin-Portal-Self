@@ -89,7 +89,7 @@ const PortfolioFormPage: React.FC = () => {
       <form id="portfolioForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
-            <ImageUploader initialFile={form.file ?? null} initialUrl={undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? null }))} />
+            <ImageUploader initialFile={form.file ?? null} initialUrl={isEdit ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? items.find((x) => String(x.id) === String(id))?.image ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? `http://localhost:5000/uploads/portfolio/${items.find((x) => String(x.id) === String(id))?.image}`) : undefined) : undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? null }))} />
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Name *</label>
@@ -106,33 +106,32 @@ const PortfolioFormPage: React.FC = () => {
             <label className="block text-sm text-gray-700 mb-1">Description</label>
             <RichTextEditor value={form.description} onChange={(v) => setForm((f) => ({ ...f, description: v }))} />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Status</span>
-            <label className="inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only" 
-                checked={form.status === "Active"} 
-                onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked ? "Active" : "Exit" }))} 
-              />
-              <span className={`w-10 h-5 flex items-center bg-gray-300 rounded-full p-1 ${ form.status === "Active" ? "bg-green-600" : "bg-gray-300" }`}>
-                <span className={`bg-white w-4 h-4 rounded-full shadow transform transition ${ form.status === "Active" ? "translate-x-5" : "translate-x-0" }`}></span>
-              </span>
-            </label>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Visible</span>
-            <label className="inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only" 
-                checked={form.isVisible} 
-                onChange={(e) => setForm((f) => ({ ...f, isVisible: e.target.checked }))} 
-              />
-              <span className={`w-10 h-5 flex items-center bg-gray-300 rounded-full p-1 ${ form.isVisible ? "bg-green-600" : "bg-gray-300" }`}>
-                <span className={`bg-white w-4 h-4 rounded-full shadow transform transition ${ form.isVisible ? "translate-x-5" : "translate-x-0" }`}></span>
-              </span>
-            </label>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Status</label>
+              <select
+                className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700"
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+              >
+                <option value="Active">Active</option>
+                <option value="Exit">Exit</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Visible</label>
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={form.isVisible}
+                  onChange={(e) => setForm((f) => ({ ...f, isVisible: e.target.checked }))}
+                />
+                <span className={`w-10 h-5 flex items-center bg-gray-300 rounded-full p-1 ${ form.isVisible ? "bg-green-600" : "bg-gray-300" }`}>
+                  <span className={`bg-white w-4 h-4 rounded-full shadow transform transition ${ form.isVisible ? "translate-x-5" : "translate-x-0" }`}></span>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
       </form>

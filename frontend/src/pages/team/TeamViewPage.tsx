@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import DOMPurify from "dompurify";
+import { fetchTeam } from "../../store/slices/teamSlice";
 
 const TeamViewPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const member = useAppSelector((s) => s.team.items.find((m) => String(m.id) === String(id)));
+  const dispatch = useAppDispatch();
+
+  // Unconditional selectors
+  const items = useAppSelector((s) => s.team.items);
+  const member = items.find((m) => String(m.id) === String(id));
+
+  useEffect(() => {
+    // If items are empty or member missing, load team list (server supports admin flag)
+    if (!member && id) {
+      dispatch(fetchTeam({ page: 1, limit: 50 } as any));
+    }
+  }, [id, member, dispatch]);
 
   if (!member) {
     return (
@@ -28,8 +40,8 @@ const TeamViewPage: React.FC = () => {
       </div>
       <div className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 md:grid-cols-[160px_1fr] gap-6">
         <div>
-          {member.image ? (
-            <img src={`http://localhost:5000/uploads/team/${member.image}`} className="w-40 h-40 rounded-full object-cover" />
+          {(member.imageUrl || member.image) ? (
+            <img src={member.imageUrl ?? `http://localhost:5000/uploads/team/${member.image}`} className="w-40 h-40 rounded-full object-cover" />
           ) : (
             <div className="w-40 h-40 rounded-full bg-gray-200" />
           )}

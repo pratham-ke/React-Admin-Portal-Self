@@ -13,8 +13,9 @@ const TeamFormPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items, loading } = useAppSelector((s) => s.team);
 
-  const [form, setForm] = useState<{ name: string; position: string; email?: string; linkedin?: string; biography?: string; status: string; file?: File | null }>({ name: "", position: "", email: "", linkedin: "", biography: "", status: "active", file: null });
-  const [errors, setErrors] = useState<{ name?: string; position?: string }>({});
+  // Note: backend Team model uses `bio` as the field name; keep local form property `bio` to match payload
+  const [form, setForm] = useState<{ name: string; position: string; email?: string; linkedin?: string; bio?: string; status: string; file?: File | null }>({ name: "", position: "", email: "", linkedin: "", bio: "", status: "active", file: null });
+  const [errors, setErrors] = useState<{ name?: string; position?: string; email?: string; linkedin?: string; file?: string }>({});
 
   useEffect(() => {
     if (!items.length) dispatch(fetchTeam(undefined));
@@ -24,15 +25,27 @@ const TeamFormPage: React.FC = () => {
     if (isEdit) {
       const m = items.find((x) => String(x.id) === String(id));
       if (m) {
-        setForm({ name: m.name, position: m.position, email: m.email, linkedin: m.linkedin, biography: m.biography, status: m.status ?? "active", file: null });
+        // Cast to any because backend model may use `bio` or `biography` depending on migration
+        const anyM = m as any;
+        setForm({ name: m.name, position: m.position, email: m.email, linkedin: m.linkedin, bio: anyM.bio ?? anyM.biography ?? "", status: m.status ?? "active", file: null });
       }
     }
   }, [isEdit, id, items]);
 
+  const validateEmail = (email: string) => {
+    // RFC 5322 Official Standard regex (simplified for enterprise)
+    return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email);
+  };
+  const validateLinkedIn = (url: string) => {
+    return /^https?:\/\/(www\.)?linkedin\.com\/.+/.test(url);
+  };
   const validate = () => {
-    const e: { name?: string; position?: string } = {};``
+    const e: { name?: string; position?: string; email?: string; linkedin?: string; file?: string } = {};
     if (!form.name.trim()) e.name = "Name is required";
     if (!form.position.trim()) e.position = "Position is required";
+    if (form.email && !validateEmail(form.email)) e.email = "Enter a valid enterprise email address";
+  if (form.linkedin && !validateLinkedIn(form.linkedin)) e.linkedin = "Enter a valid LinkedIn URL (linkedin.com/...)";
+    if (form.file && form.file.size > 2 * 1024 * 1024) e.file = "Image size should be less than 2MB";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -69,11 +82,12 @@ const TeamFormPage: React.FC = () => {
             <div>
               <ImageUploader
                 initialFile={form.file ?? null}
-                initialUrl={undefined}
+                initialUrl={isEdit ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? items.find((x) => String(x.id) === String(id))?.image ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? `http://localhost:5000/uploads/team/${items.find((x) => String(x.id) === String(id))?.image}`) : undefined) : undefined}
                 onFileChange={(f) => setForm((s) => ({ ...s, file: f }))}
                 label="Upload Picture"
                 rounded
               />
+              {errors.file && <p className="text-xs text-red-600 mt-1">{errors.file}</p>}
             </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Name *</label>
@@ -95,17 +109,19 @@ const TeamFormPage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Email</label>
-            <input className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            <input className={`w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 ${errors.email ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-700"}`} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">LinkedIn URL</label>
-            <input className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" value={form.linkedin} onChange={(e) => setForm((f) => ({ ...f, linkedin: e.target.value }))} />
+            <input className={`w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 ${errors.linkedin ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-700"}`} value={form.linkedin} onChange={(e) => setForm((f) => ({ ...f, linkedin: e.target.value }))} />
+            {errors.linkedin && <p className="text-xs text-red-600 mt-1">{errors.linkedin}</p>}
           </div>
         </div>
         <div className="space-y-4">
             <div>
               <label className="block text-sm text-gray-700 mb-1">Biography</label>
-              <RichTextEditor value={form.biography ?? ""} onChange={(v) => setForm((f) => ({ ...f, biography: v }))} placeholder="Write biography here" />
+                <RichTextEditor value={form.bio ?? ""} onChange={(v) => setForm((f) => ({ ...f, bio: v }))} placeholder="Write biography here" />
             </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Status</span>

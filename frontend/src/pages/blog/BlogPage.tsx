@@ -58,7 +58,7 @@ const BlogPage: React.FC = () => {
 
   <DataTable
         columns={[
-          { key: "image", title: "Image", render: (post) => post.image ? <img src={`http://localhost:5000/uploads/blog/${post.image}`} alt={post.title} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
+          { key: "image", title: "Image", render: (post) => post.imageUrl || post.image ? <img src={post.imageUrl ?? `http://localhost:5000/uploads/blog/${post.image}`} alt={post.title} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
           { key: "title", title: "Title", sortable: true },
           { key: "author", title: "Author", sortable: true },
           { key: "category", title: "Category", sortable: true },

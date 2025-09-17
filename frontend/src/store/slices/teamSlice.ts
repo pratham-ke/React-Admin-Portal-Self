@@ -7,6 +7,7 @@ export interface TeamMember {
   position: string;
   email?: string;
   image?: string; // server-stored filename
+  imageUrl?: string; // full URL to image returned by backend
   linkedin?: string;
   biography?: string;
   status?: string; // active/inactive
