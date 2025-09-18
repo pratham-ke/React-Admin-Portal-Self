@@ -7,6 +7,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Dashboard layout
 import DashboardLayout from "./pages/DashboardLayout";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 // Route guards
 import PrivateRoute from "./routes/PrivateRoute";
@@ -37,7 +38,7 @@ import UserViewPage from "./pages/users/UserViewPage";
 
 // Other pages
 import ProfilePage from "./pages/profile/ProfilePage";
-import SettingsPage from "./pages/settings/SettingsPage";
+import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
 import ContactPage from "./pages/contact/ContactPage";
 
 function App() {
@@ -69,7 +70,9 @@ function App() {
         path="/dashboard"
         element={
           <PrivateRoute>
-            <DashboardLayout />
+            <ErrorBoundary>
+              <DashboardLayout />
+            </ErrorBoundary>
           </PrivateRoute>
         }
       >
@@ -101,7 +104,7 @@ function App() {
 
         {/* Other routes */}
         <Route path="profile" element={<ProfilePage />} />
-        <Route path="settings" element={<SettingsPage />} />
+  <Route path="settings" element={<ChangePasswordPage />} />
         <Route path="contact" element={<ContactPage />} />
       </Route>
 

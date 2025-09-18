@@ -7,10 +7,18 @@ const UserViewPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const user = useAppSelector((s) => s.users.currentUser as any) || useAppSelector((s) => s.users.items.find((u: any) => String(u.id) === String(id)));
+
+  // Call selectors/hooks unconditionally to preserve hook order
+  const currentUser = useAppSelector((s) => s.users.currentUser as any);
+  const items = useAppSelector((s) => s.users.items);
+  // Prefer the selected user by id; only use currentUser when it matches the requested id
+  const selected = items.find((u: any) => String(u.id) === String(id));
+  const user = selected ?? (currentUser && String(currentUser.id) === String(id) ? currentUser : undefined);
 
   useEffect(() => {
-    if (!user && id) dispatch(fetchUserById(Number(id)));
+    if (!user && id) {
+      dispatch(fetchUserById(Number(id)));
+    }
   }, [id, user, dispatch]);
 
   if (!user) {
@@ -33,8 +41,11 @@ const UserViewPage: React.FC = () => {
       </div>
       <div className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 md:grid-cols-[160px_1fr] gap-6">
         <div>
-          {/* placeholder for profile image if available in backend as image filename */}
-          <div className="w-40 h-40 rounded-full bg-gray-200" />
+          {(user.imageUrl || user.image) ? (
+            <img src={user.imageUrl ?? `http://localhost:5000/uploads/user/${user.image}`} className="w-40 h-40 rounded-full object-cover" />
+          ) : (
+            <div className="w-40 h-40 rounded-full bg-gray-200" />
+          )}
         </div>
         <div className="space-y-2 text-gray-800">
           <div className="text-lg font-semibold">{user.name}</div>

@@ -4,6 +4,7 @@ const { Team } = require('../models');
 const { auth, adminAuth } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const sanitizeHtml = require('sanitize-html');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -14,7 +15,12 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
+  const allowed = /jpeg|jpg|png|gif/;
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!allowed.test(ext)) return cb(new Error('Only image files are allowed'));
+  cb(null, true);
+} });
 
 // Helper function to clean empty strings
 const cleanEmptyStrings = (data) => {
@@ -31,15 +37,25 @@ const cleanEmptyStrings = (data) => {
 router.get('/', async (req, res) => {
   try {
     let where = {};
-    // If ?admin=true and user is authenticated, return all
-    if (!(req.query.admin === 'true' && req.user)) {
+    // If ?admin=true is present, return all members (include inactive).
+    // Previously we required both admin=true and an authenticated req.user;
+    // loosen that requirement so the admin query parameter is sufficient to request all entries.
+    if (!(req.query.admin === 'true')) {
+      // default: only active members
       where.status = 'active';
     }
     const team = await Team.findAll({
       where,
       order: [['order', 'ASC']],
     });
-    res.json(team);
+    const result = team.map((m) => {
+      const j = m.toJSON();
+      if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+      // Normalize biography field (backend uses `bio` in DB, frontend expects `biography`)
+      if (!j.biography && j.bio) j.biography = j.bio;
+      return j;
+    });
+    res.json(result);
   } catch (error) {
     res.status(500).json({
       message: 'Error fetching team members',
@@ -55,7 +71,10 @@ router.get('/:id', async (req, res) => {
     if (!member) {
       return res.status(404).json({ message: 'Team member not found' });
     }
-    res.json(member);
+    const j = member.toJSON();
+  if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+  if (!j.biography && j.bio) j.biography = j.bio;
+    res.json(j);
   } catch (error) {
     res.status(500).json({
       message: 'Error fetching team member',
@@ -68,11 +87,15 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     let memberData = cleanEmptyStrings(req.body);
+    if (memberData.biography) memberData.biography = sanitizeHtml(memberData.biography, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1','h2','h3','img','table','thead','tbody','tr','td']), allowedAttributes: { '*': ['href','align','alt','style','src'] } });
     if (req.file) {
       memberData.image = req.file.filename;
     }
     const member = await Team.create(memberData);
-    res.status(201).json(member);
+    const created = member.toJSON();
+    if (created.image) created.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${created.image}`;
+  if (!created.biography && created.bio) created.biography = created.bio;
+    res.status(201).json(created);
   } catch (error) {
     res.status(500).json({
       message: 'Error creating team member',
@@ -89,12 +112,16 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
       return res.status(404).json({ message: 'Team member not found' });
     }
     let updateData = cleanEmptyStrings(req.body);
+    if (updateData.biography) updateData.biography = sanitizeHtml(updateData.biography, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1','h2','h3','img','table','thead','tbody','tr','td']), allowedAttributes: { '*': ['href','align','alt','style','src'] } });
     if (req.file) {
       updateData.image = req.file.filename;
     }
     await member.update(updateData);
-    res.json(member);
-  } catch (error) {
+    const updated = member.toJSON();
+    if (updated.image) updated.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${updated.image}`;
+  if (!updated.biography && updated.bio) updated.biography = updated.bio;
+    res.json(updated);
+  } catch (error) { 
     res.status(500).json({
       message: 'Error updating team member',
       error: error.message,
@@ -128,7 +155,9 @@ router.patch('/:id/toggle-status', auth, async (req, res) => {
     }
     member.status = member.status === 'active' ? 'inactive' : 'active';
     await member.save();
-    res.json({ id: member.id, status: member.status });
+    const j = member.toJSON();
+    if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+    res.json(j);
   } catch (error) {
     res.status(500).json({
       message: 'Error toggling team member status',

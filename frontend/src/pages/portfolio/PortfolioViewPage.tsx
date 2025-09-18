@@ -1,12 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import DOMPurify from "dompurify";
+import { fetchPortfolio } from "../../store/slices/portfolioSlice";
 
 const PortfolioViewPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const item = useAppSelector((s) => s.portfolio.items.find((item) => String(item.id) === String(id)));
+  const dispatch = useAppDispatch();
+
+  const items = useAppSelector((s) => s.portfolio.items);
+  const item = items.find((item) => String(item.id) === String(id));
+
+  useEffect(() => {
+    if (!item && id) {
+      dispatch(fetchPortfolio({ page: 1, limit: 50 } as any));
+    }
+  }, [id, item, dispatch]);
 
   if (!item) {
     return (
@@ -28,8 +38,8 @@ const PortfolioViewPage: React.FC = () => {
       </div>
       <div className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 md:grid-cols-[160px_1fr] gap-6">
         <div>
-          {item.image ? (
-            <img src={`http://localhost:5000/uploads/portfolio/${item.image}`} className="w-40 h-40 rounded object-cover" />
+          {(item.imageUrl || item.image) ? (
+            <img src={item.imageUrl ?? `http://localhost:5000/uploads/portfolio/${item.image}`} className="w-40 h-40 rounded object-cover" />
           ) : (
             <div className="w-40 h-40 rounded bg-gray-200" />
           )}

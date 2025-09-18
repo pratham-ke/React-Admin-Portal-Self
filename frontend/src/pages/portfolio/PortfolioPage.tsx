@@ -41,6 +41,19 @@ const PortfolioPage: React.FC = () => {
     }
   };
 
+  // helper: strip HTML tags and collapse whitespace for safe table display
+  const stripHtml = (html?: string) => {
+    if (!html) return "";
+    try {
+      // remove tags
+      const tmp = html.replace(/<[^>]*>/g, "");
+      // collapse whitespace and trim
+      return tmp.replace(/\s+/g, " ").trim();
+    } catch (e) {
+      return html;
+    }
+  };
+
 
   return (
     <div className="space-y-4">
@@ -58,9 +71,9 @@ const PortfolioPage: React.FC = () => {
 
   <DataTable
         columns={[
-          { key: "image", title: "Image", render: (item) => item.image ? <img src={`http://localhost:5000/uploads/portfolio/${item.image}`} alt={item.name} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
+          { key: "image", title: "Image", render: (item) => item.imageUrl || item.image ? <img src={item.imageUrl ?? `http://localhost:5000/uploads/portfolio/${item.image}`} alt={item.name} className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-gray-200" /> },
           { key: "name", title: "Name", sortable: true },
-          { key: "description", title: "Description", render: (item) => <div className="max-w-xs truncate">{item.description ?? ""}</div> },
+          { key: "description", title: "Description", render: (item) => <div className="max-w-xs truncate">{stripHtml(item.description)}</div> },
           { key: "status", title: "Status", render: (item) => (
             <label className="inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only" checked={(item.status ?? "Active") === "Active"} onChange={() => dispatch(togglePortfolioStatus(item.id))} />

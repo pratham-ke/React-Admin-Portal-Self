@@ -6,6 +6,7 @@ export interface PortfolioItem {
   name: string;
   description?: string;
   image?: string; // server-stored filename
+  imageUrl?: string; // full URL to image returned by backend
   status?: string; // Active/Exit
   isVisible?: boolean;
   createdAt?: string;

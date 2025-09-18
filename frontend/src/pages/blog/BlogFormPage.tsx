@@ -13,26 +13,26 @@ const BlogFormPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items, loading } = useAppSelector((s) => s.blog);
 
-  const [form, setForm] = useState<{ 
-    title: string; 
-    description: string; 
-    content: string; 
-    category: string; 
-    author: string; 
-    status: string; 
-    date: string; 
-    tags: string; 
-    file?: File 
-  }>({ 
-    title: "", 
-    description: "", 
-    content: "", 
-    category: "", 
-    author: "", 
-    status: "draft", 
-    date: new Date().toISOString().split('T')[0], 
-    tags: "", 
-    file: undefined 
+  const [form, setForm] = useState<{
+    title: string;
+  // description removed per module change
+    content: string;
+    category: string;
+    author: string;
+    status: string;
+    date: string;
+    file?: File;
+    imageUrl?: string; // existing server image filename for preview
+  }>({
+    title: "",
+  // description removed
+    content: "",
+    category: "",
+    author: "",
+    status: "draft",
+    date: new Date().toISOString().split('T')[0],
+    file: undefined,
+    imageUrl: undefined,
   });
   const [errors, setErrors] = useState<{ title?: string; content?: string }>({});
 
@@ -44,16 +44,15 @@ const BlogFormPage: React.FC = () => {
     if (isEdit) {
       const post = items.find((x) => String(x.id) === String(id));
       if (post) {
-        setForm({ 
-          title: post.title, 
-          description: post.description ?? "", 
-          content: post.content, 
-          category: post.category ?? "", 
-          author: post.author ?? "", 
-          status: post.status ?? "draft", 
-          date: post.date ? new Date(post.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0], 
-          tags: post.tags ? post.tags.join(', ') : "", 
-          file: undefined 
+        setForm({
+          title: post.title,
+          content: post.content,
+          category: post.category ?? "",
+          author: post.author ?? "",
+          status: post.status ?? "draft",
+          date: post.date ? new Date(post.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          file: undefined,
+          imageUrl: post.image ?? undefined,
         });
       }
     }
@@ -71,14 +70,13 @@ const BlogFormPage: React.FC = () => {
     ev.preventDefault();
     if (!validate()) return;
     try {
-      const tagsArray = form.tags ? form.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
-      const formData = { ...form, tags: tagsArray };
-      
+      // remove tag handling (tags removed from UI and payload)
+      const payload = { ...form } as any;
       if (isEdit) {
-        await dispatch(updateBlogPost({ id: Number(id), data: formData })).unwrap();
+        await dispatch(updateBlogPost({ id: Number(id), data: payload })).unwrap();
         dispatch(showSuccess("Updated successfully"));
       } else {
-        await dispatch(createBlogPost(formData as any)).unwrap();
+        await dispatch(createBlogPost(payload)).unwrap();
         dispatch(showSuccess("Saved successfully"));
       }
       navigate("/dashboard/blog", { replace: true });
@@ -97,11 +95,11 @@ const BlogFormPage: React.FC = () => {
         </div>
       </div>
 
-      <form id="blogForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 space-y-6">
+          <form id="blogForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <ImageUploader initialFile={form.file} initialUrl={undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? undefined }))} />
+              <ImageUploader initialFile={form.file} initialUrl={form.imageUrl ? `http://localhost:5000/uploads/blog/${form.imageUrl}` : undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? undefined }))} onRemove={() => setForm((s) => ({ ...s, file: undefined, imageUrl: undefined }))} />
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Title *</label>
@@ -122,11 +120,20 @@ const BlogFormPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Category</label>
-              <input 
-                className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" 
-                value={form.category} 
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} 
-              />
+              <select
+                className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700"
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              >
+                <option value="">Select category</option>
+                <option value="Business">Business</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Music">Music</option>
+                <option value="Band">Band</option>
+                <option value="Technology">Technology</option>
+                <option value="Education">Education</option>
+                <option value="Lifestyle">Lifestyle</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Date</label>
@@ -137,15 +144,7 @@ const BlogFormPage: React.FC = () => {
                 onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} 
               />
             </div>
-            <div>
-              <label className="block text-sm text-gray-700 mb-1">Tags (comma-separated)</label>
-              <input 
-                className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" 
-                value={form.tags} 
-                onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))} 
-                placeholder="tag1, tag2, tag3"
-              />
-            </div>
+            {/* Tags removed per requirements */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700">Status</span>
               <label className="inline-flex items-center cursor-pointer">
@@ -162,14 +161,7 @@ const BlogFormPage: React.FC = () => {
             </div>
           </div>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-gray-700 mb-1">Description</label>
-              <textarea 
-                className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700 min-h-[120px]" 
-                value={form.description} 
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} 
-              />
-            </div>
+            {/* Description removed from Blog module */}
           </div>
         </div>
         <div>

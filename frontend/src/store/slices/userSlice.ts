@@ -9,6 +9,7 @@ export interface User {
   role: string;
   active: boolean; // maps to backend.isActive
   createdAt?: string;
+  imageUrl?: string; // profile image URL
 }
 
 interface UserState {
@@ -35,6 +36,7 @@ const mapFromApi = (u: any): User => ({
   role: u.role ?? "user",
   active: typeof u.isActive === "boolean" ? u.isActive : !!u.active,
   createdAt: u.createdAt ?? u.created_at ?? undefined,
+  imageUrl: u.imageUrl ?? u.image_url ?? u.image ?? undefined,
 });
 
 // Fetch all users
@@ -70,7 +72,7 @@ export const fetchUserById = createAsyncThunk(
 // Create user
 export const createUser = createAsyncThunk(
   "users/create",
-  async (payload: { name: string; email: string; role: string; active?: boolean; password?: string; file?: File | null }, thunkAPI) => {
+  async (payload: { name: string; email: string; role: string; active?: boolean; password?: string; confirmPassword?: string; file?: File | null }, thunkAPI) => {
     try {
       const form = new FormData();
       form.append("username", payload.name);
@@ -90,7 +92,7 @@ export const createUser = createAsyncThunk(
 // Update user
 export const updateUser = createAsyncThunk(
   "users/update",
-  async (payload: { id: number; data: { name: string; email: string; role: string; active?: boolean; file?: File | null } }, thunkAPI) => {
+  async (payload: { id: number; data: { name: string; email: string; role: string; active?: boolean; password?: string; confirmPassword?: string; file?: File | null } }, thunkAPI) => {
     try {
       const form = new FormData();
       form.append("username", payload.data.name);

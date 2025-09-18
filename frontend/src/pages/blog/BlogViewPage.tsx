@@ -1,12 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import DOMPurify from "dompurify";
+import { fetchBlog } from "../../store/slices/blogSlice";
 
 const BlogViewPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const post = useAppSelector((s) => s.blog.items.find((post) => String(post.id) === String(id)));
+  const dispatch = useAppDispatch();
+
+  const items = useAppSelector((s) => s.blog.items);
+  const post = items.find((post) => String(post.id) === String(id));
+
+  useEffect(() => {
+    if (!post && id) {
+      dispatch(fetchBlog({ page: 1, limit: 50 } as any));
+    }
+  }, [id, post, dispatch]);
 
   if (!post) {
     return (
@@ -30,8 +40,8 @@ const BlogViewPage: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded p-6">
         <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-6 mb-6">
           <div>
-            {post.image ? (
-              <img src={`http://localhost:5000/uploads/blog/${post.image}`} className="w-40 h-40 rounded object-cover" />
+            {(post.imageUrl || post.image) ? (
+              <img src={post.imageUrl ?? `http://localhost:5000/uploads/blog/${post.image}`} className="w-40 h-40 rounded object-cover" />
             ) : (
               <div className="w-40 h-40 rounded bg-gray-200" />
             )}

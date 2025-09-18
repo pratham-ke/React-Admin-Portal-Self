@@ -113,7 +113,7 @@ const DataTable: React.FC<Props> = ({ columns, rows, pagination, sortable, loadi
         </thead>
         <tbody>
           {sortedRows.map((r: any, idx: number) => (
-            <tr key={r.id ?? idx} className="border-t">
+            <tr key={r.id ?? idx} className={`border-t ${r.__rowClass ?? ""}`}>
               {columns.map((col) => (
                 <td key={col.key} className="px-4 py-2 align-top">
                   {col.render ? col.render(r) : (r[col.key] ?? "")}
