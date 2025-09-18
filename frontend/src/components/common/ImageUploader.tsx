@@ -5,6 +5,7 @@ interface Props {
   initialFile?: File | null;
   initialUrl?: string | null;
   onFileChange: (file: File | null) => void;
+  onRemove?: () => void;
   accept?: string;
   label?: string;
   rounded?: boolean;
@@ -14,6 +15,7 @@ const ImageUploader: React.FC<Props> = ({
   initialFile = null,
   initialUrl = null,
   onFileChange,
+  onRemove,
   accept = "image/*",
   label = "Upload Image",
   rounded = false,
@@ -46,6 +48,7 @@ const ImageUploader: React.FC<Props> = ({
   const handleRemoveImage = () => {
     setFile(null);
     onFileChange(null);
+    if (onRemove) onRemove();
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }

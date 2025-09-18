@@ -64,7 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                 navigate("/dashboard/settings");
               }}
             >
-              Settings
+              Change Password
             </button>
           </div>
         )}

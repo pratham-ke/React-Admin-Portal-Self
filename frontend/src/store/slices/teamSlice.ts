@@ -102,7 +102,7 @@ export const toggleTeamStatus = createAsyncThunk(
   async (id: number, thunkAPI) => {
     try {
       const res = await apiClient.patch(`/team/${id}/toggle-status`);
-      return res.data as { id: number; status: string };
+      return res.data as TeamMember;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to toggle");
     }
@@ -149,9 +149,10 @@ const teamSlice = createSlice({
         state.items = state.items.filter((m) => m.id !== action.payload);
         state.total = Math.max(0, state.total - 1);
       })
-      .addCase(toggleTeamStatus.fulfilled, (state, action: PayloadAction<{ id: number; status: string }>) => {
+      .addCase(toggleTeamStatus.fulfilled, (state, action: PayloadAction<TeamMember>) => {
         const idx = state.items.findIndex((m) => m.id === action.payload.id);
-        if (idx !== -1) state.items[idx].status = action.payload.status as any;
+        if (idx !== -1) state.items[idx] = { ...state.items[idx], ...action.payload };
+        else state.items.unshift(action.payload);
       });
   },
 });

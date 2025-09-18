@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchUserById, updateUser } from "../../store/slices/userSlice";
 import ImageUploader from "../../components/common/ImageUploader";
-import RichTextEditor from "../../components/common/RichTextEditor";
 import { showSuccess, showError } from "../../store/slices/notificationSlice";
 
 const ProfilePage: React.FC = () => {
@@ -11,7 +10,7 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const authUser = useAppSelector((s) => s.auth.user);
   const userState = useAppSelector((s) => s.users);
-  const [form, setForm] = useState<any>({ name: "", email: "", role: "user", active: true, file: null, biography: "", linkedin: "" });
+  const [form, setForm] = useState<any>({ name: "", email: "", role: "user", active: true, file: null });
 
   useEffect(() => {
     if (authUser && authUser.id) dispatch(fetchUserById(authUser.id));
@@ -19,7 +18,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (userState.currentUser) {
-      setForm({ name: userState.currentUser.name, email: userState.currentUser.email, role: userState.currentUser.role, active: userState.currentUser.active, file: null, biography: "", linkedin: "" });
+      setForm({ name: userState.currentUser.name ?? "", email: userState.currentUser.email ?? "", role: userState.currentUser.role ?? "user", active: userState.currentUser.active ?? true, file: null });
     }
   }, [userState.currentUser]);
 
@@ -56,7 +55,7 @@ const ProfilePage: React.FC = () => {
       </div>
       <form id="profileForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <ImageUploader initialFile={null} initialUrl={userState.currentUser?.imageUrl} onFileChange={(f) => setForm((s: any) => ({ ...s, file: f }))} rounded label="Profile Image" />
+          <ImageUploader initialFile={null} initialUrl={userState.currentUser?.imageUrl} onFileChange={(f) => setForm((s: any) => ({ ...s, file: f }))} onRemove={() => setForm((s: any) => ({ ...s, file: null, imageUrl: undefined }))} rounded label="Profile Image" />
           <div>
             <label className="block text-sm text-gray-700 mb-1">Name</label>
             <input className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" value={form.name} onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))} />
@@ -66,19 +65,18 @@ const ProfilePage: React.FC = () => {
             <input className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" value={form.email} readOnly />
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">LinkedIn</label>
-            <input className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" value={form.linkedin} onChange={(e) => setForm((s: any) => ({ ...s, linkedin: e.target.value }))} />
+            <label className="block text-sm text-gray-700 mb-1">Role</label>
+            <select className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700" value={form.role} onChange={(e) => setForm((s: any) => ({ ...s, role: e.target.value }))}>
+              <option value="admin">Admin</option>
+              <option value="editor">Editor</option>
+              <option value="member">Member</option>
+            </select>
           </div>
         </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Biography</label>
-          <RichTextEditor value={form.biography} onChange={(v) => setForm((s: any) => ({ ...s, biography: v }))} />
-        </div>
+        {/* Biography removed from Profile page per requirements */}
       </form>
     </div>
   );
 };
 
 export default ProfilePage;
-
-

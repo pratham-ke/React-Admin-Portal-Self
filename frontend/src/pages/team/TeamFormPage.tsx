@@ -13,8 +13,8 @@ const TeamFormPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items, loading } = useAppSelector((s) => s.team);
 
-  // Note: backend Team model uses `bio` as the field name; keep local form property `bio` to match payload
-  const [form, setForm] = useState<{ name: string; position: string; email?: string; linkedin?: string; bio?: string; status: string; file?: File | null }>({ name: "", position: "", email: "", linkedin: "", bio: "", status: "active", file: null });
+  // Use `biography` as the canonical form field (backend may accept biography or bio)
+  const [form, setForm] = useState<{ name: string; position: string; email?: string; linkedin?: string; biography?: string; status: string; file?: File | null }>({ name: "", position: "", email: "", linkedin: "", biography: "", status: "active", file: null });
   const [errors, setErrors] = useState<{ name?: string; position?: string; email?: string; linkedin?: string; file?: string }>({});
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const TeamFormPage: React.FC = () => {
       if (m) {
         // Cast to any because backend model may use `bio` or `biography` depending on migration
         const anyM = m as any;
-        setForm({ name: m.name, position: m.position, email: m.email, linkedin: m.linkedin, bio: anyM.bio ?? anyM.biography ?? "", status: m.status ?? "active", file: null });
+        setForm({ name: m.name ?? "", position: m.position ?? "", email: m.email ?? "", linkedin: m.linkedin ?? "", biography: anyM.biography ?? anyM.bio ?? "", status: m.status ?? "active", file: null });
       }
     }
   }, [isEdit, id, items]);
@@ -84,6 +84,7 @@ const TeamFormPage: React.FC = () => {
                 initialFile={form.file ?? null}
                 initialUrl={isEdit ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? items.find((x) => String(x.id) === String(id))?.image ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? `http://localhost:5000/uploads/team/${items.find((x) => String(x.id) === String(id))?.image}`) : undefined) : undefined}
                 onFileChange={(f) => setForm((s) => ({ ...s, file: f }))}
+                onRemove={() => setForm((s) => ({ ...s, file: null, imageUrl: null }))}
                 label="Upload Picture"
                 rounded
               />
@@ -121,7 +122,7 @@ const TeamFormPage: React.FC = () => {
         <div className="space-y-4">
             <div>
               <label className="block text-sm text-gray-700 mb-1">Biography</label>
-                <RichTextEditor value={form.bio ?? ""} onChange={(v) => setForm((f) => ({ ...f, bio: v }))} placeholder="Write biography here" />
+                <RichTextEditor value={form.biography ?? ""} onChange={(v) => setForm((f) => ({ ...f, biography: v }))} placeholder="Write biography here" />
             </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Status</span>

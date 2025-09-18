@@ -54,7 +54,6 @@ export const createBlogPost = createAsyncThunk(
       const form = new FormData();
       if (payload.file) form.append("image", payload.file);
       if (payload.title) form.append("title", payload.title);
-      if (payload.description) form.append("description", payload.description);
       if (payload.content) form.append("content", payload.content);
       if (payload.category) form.append("category", payload.category);
       if (payload.author) form.append("author", payload.author);
@@ -76,7 +75,6 @@ export const updateBlogPost = createAsyncThunk(
       const form = new FormData();
       if (payload.data.file) form.append("image", payload.data.file);
       if (payload.data.title) form.append("title", payload.data.title);
-      if (payload.data.description) form.append("description", payload.data.description);
       if (payload.data.content) form.append("content", payload.data.content);
       if (payload.data.category) form.append("category", payload.data.category);
       if (payload.data.author) form.append("author", payload.data.author);

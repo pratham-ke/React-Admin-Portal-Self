@@ -25,7 +25,7 @@ const UserFormPage: React.FC = () => {
       const nid = Number(id);
       const existing = items.find((u: any) => u.id === nid);
       if (existing) {
-  setForm({ name: existing.name, email: existing.email, role: existing.role, active: !!existing.active, file: null, imageUrl: existing.imageUrl ?? null, password: "", confirmPassword: "" });
+        setForm({ name: existing.name ?? "", email: existing.email ?? "", role: existing.role ?? "user", active: !!existing.active, file: null, imageUrl: existing.imageUrl ?? null, password: "", confirmPassword: "" });
       } else {
         // fetch single user
         dispatch(fetchUserById(nid));
@@ -34,10 +34,10 @@ const UserFormPage: React.FC = () => {
   }, [isEdit, id, items, dispatch]);
 
   useEffect(() => {
-    if (isEdit && currentUser) {
-  setForm({ name: currentUser.name, email: currentUser.email, role: currentUser.role, active: !!currentUser.active, file: null, imageUrl: currentUser.imageUrl ?? null, password: "", confirmPassword: "" });
+    if (isEdit && currentUser && Number(id) === Number(currentUser.id)) {
+      setForm({ name: currentUser.name ?? "", email: currentUser.email ?? "", role: currentUser.role ?? "user", active: !!currentUser.active, file: null, imageUrl: currentUser.imageUrl ?? null, password: "", confirmPassword: "" });
     }
-  }, [currentUser, isEdit]);
+  }, [currentUser, isEdit, id]);
 
   const validate = () => {
     const e: { name?: string; email?: string; password?: string; confirmPassword?: string; file?: string } = {};
@@ -99,6 +99,7 @@ const UserFormPage: React.FC = () => {
               initialFile={form.file ?? null}
               initialUrl={form.imageUrl ? `http://localhost:5000/uploads/user/${form.imageUrl}` : undefined}
               onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? null }))}
+              onRemove={() => setForm((s) => ({ ...s, file: null, imageUrl: null }))}
               accept=".jpg,.jpeg,.png"
               label="Profile Image"
               rounded

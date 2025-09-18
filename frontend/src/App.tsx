@@ -38,7 +38,7 @@ import UserViewPage from "./pages/users/UserViewPage";
 
 // Other pages
 import ProfilePage from "./pages/profile/ProfilePage";
-import SettingsPage from "./pages/settings/SettingsPage";
+import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
 import ContactPage from "./pages/contact/ContactPage";
 
 function App() {
@@ -104,7 +104,7 @@ function App() {
 
         {/* Other routes */}
         <Route path="profile" element={<ProfilePage />} />
-        <Route path="settings" element={<SettingsPage />} />
+  <Route path="settings" element={<ChangePasswordPage />} />
         <Route path="contact" element={<ContactPage />} />
       </Route>
 

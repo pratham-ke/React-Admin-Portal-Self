@@ -37,8 +37,11 @@ const cleanEmptyStrings = (data) => {
 router.get('/', async (req, res) => {
   try {
     let where = {};
-    // If ?admin=true and user is authenticated, return all
-    if (!(req.query.admin === 'true' && req.user)) {
+    // If ?admin=true is present, return all members (include inactive).
+    // Previously we required both admin=true and an authenticated req.user;
+    // loosen that requirement so the admin query parameter is sufficient to request all entries.
+    if (!(req.query.admin === 'true')) {
+      // default: only active members
       where.status = 'active';
     }
     const team = await Team.findAll({
@@ -48,6 +51,8 @@ router.get('/', async (req, res) => {
     const result = team.map((m) => {
       const j = m.toJSON();
       if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+      // Normalize biography field (backend uses `bio` in DB, frontend expects `biography`)
+      if (!j.biography && j.bio) j.biography = j.bio;
       return j;
     });
     res.json(result);
@@ -67,7 +72,8 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Team member not found' });
     }
     const j = member.toJSON();
-    if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+  if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+  if (!j.biography && j.bio) j.biography = j.bio;
     res.json(j);
   } catch (error) {
     res.status(500).json({
@@ -88,6 +94,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     const member = await Team.create(memberData);
     const created = member.toJSON();
     if (created.image) created.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${created.image}`;
+  if (!created.biography && created.bio) created.biography = created.bio;
     res.status(201).json(created);
   } catch (error) {
     res.status(500).json({
@@ -112,8 +119,9 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
     await member.update(updateData);
     const updated = member.toJSON();
     if (updated.image) updated.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${updated.image}`;
+  if (!updated.biography && updated.bio) updated.biography = updated.bio;
     res.json(updated);
-  } catch (error) {
+  } catch (error) { 
     res.status(500).json({
       message: 'Error updating team member',
       error: error.message,
@@ -147,7 +155,9 @@ router.patch('/:id/toggle-status', auth, async (req, res) => {
     }
     member.status = member.status === 'active' ? 'inactive' : 'active';
     await member.save();
-    res.json({ id: member.id, status: member.status });
+    const j = member.toJSON();
+    if (j.image) j.imageUrl = `${req.protocol}://${req.get('host')}/uploads/team/${j.image}`;
+    res.json(j);
   } catch (error) {
     res.status(500).json({
       message: 'Error toggling team member status',

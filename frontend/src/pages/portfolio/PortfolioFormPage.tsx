@@ -89,7 +89,7 @@ const PortfolioFormPage: React.FC = () => {
       <form id="portfolioForm" onSubmit={onSubmit} className="bg-white border border-gray-200 rounded p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
-            <ImageUploader initialFile={form.file ?? null} initialUrl={isEdit ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? items.find((x) => String(x.id) === String(id))?.image ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? `http://localhost:5000/uploads/portfolio/${items.find((x) => String(x.id) === String(id))?.image}`) : undefined) : undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? null }))} />
+            <ImageUploader initialFile={form.file ?? null} initialUrl={isEdit ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? items.find((x) => String(x.id) === String(id))?.image ? (items.find((x) => String(x.id) === String(id))?.imageUrl ?? `http://localhost:5000/uploads/portfolio/${items.find((x) => String(x.id) === String(id))?.image}`) : undefined) : undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? null }))} onRemove={() => setForm((s) => ({ ...s, file: null, imageUrl: undefined }))} />
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">Name *</label>

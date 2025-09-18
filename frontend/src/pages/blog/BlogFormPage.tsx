@@ -15,7 +15,7 @@ const BlogFormPage: React.FC = () => {
 
   const [form, setForm] = useState<{
     title: string;
-    description: string;
+  // description removed per module change
     content: string;
     category: string;
     author: string;
@@ -25,7 +25,7 @@ const BlogFormPage: React.FC = () => {
     imageUrl?: string; // existing server image filename for preview
   }>({
     title: "",
-    description: "",
+  // description removed
     content: "",
     category: "",
     author: "",
@@ -46,7 +46,6 @@ const BlogFormPage: React.FC = () => {
       if (post) {
         setForm({
           title: post.title,
-          description: post.description ?? "",
           content: post.content,
           category: post.category ?? "",
           author: post.author ?? "",
@@ -100,7 +99,7 @@ const BlogFormPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <ImageUploader initialFile={form.file} initialUrl={form.imageUrl ? `http://localhost:5000/uploads/blog/${form.imageUrl}` : undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? undefined }))} />
+              <ImageUploader initialFile={form.file} initialUrl={form.imageUrl ? `http://localhost:5000/uploads/blog/${form.imageUrl}` : undefined} onFileChange={(f) => setForm((s) => ({ ...s, file: f ?? undefined }))} onRemove={() => setForm((s) => ({ ...s, file: undefined, imageUrl: undefined }))} />
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Title *</label>
@@ -162,14 +161,7 @@ const BlogFormPage: React.FC = () => {
             </div>
           </div>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-gray-700 mb-1">Description</label>
-              <textarea 
-                className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 border-gray-300 focus:ring-green-700 min-h-[120px]" 
-                value={form.description} 
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} 
-              />
-            </div>
+            {/* Description removed from Blog module */}
           </div>
         </div>
         <div>

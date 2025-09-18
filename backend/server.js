@@ -84,9 +84,12 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 const startServer = async () => {
   try {
-    // Sync database
-    await db.sequelize.sync();
-    console.log('✅ Database synced successfully');
+  // Sync database
+  // In development we allow sequelize to alter tables to match models (adds missing columns)
+  // This prevents runtime errors when the DB schema is missing optional fields used by models.
+  const alter = process.env.NODE_ENV !== 'production';
+  await db.sequelize.sync({ alter });
+  console.log(`✅ Database synced successfully (alter=${alter})`);
 
     // Start server
     app.listen(PORT, HOST, () => {

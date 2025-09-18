@@ -73,19 +73,36 @@ const TeamPage: React.FC = () => {
           { key: "position", title: "Position", sortable: true },
           { key: "email", title: "Email", sortable: true },
           { key: "linkedin", title: "LinkedIn", render: (m) => m.linkedin ? <a href={m.linkedin} target="_blank" rel="noreferrer" className="text-green-700 hover:underline">Profile</a> : <span className="text-gray-400">—</span> },
-          { key: "status", title: "Status", render: (m) => (
-            <label className="inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only" checked={(m.status ?? "active") === "active"} onChange={() => dispatch(toggleTeamStatus(m.id))} />
-              <span className={`w-10 h-5 flex items-center bg-gray-300 rounded-full p-1 ${ (m.status ?? "active") === "active" ? "bg-green-600" : "bg-gray-300" }`}>
-                <span className={`bg-white w-4 h-4 rounded-full shadow transform transition ${ (m.status ?? "active") === "active" ? "translate-x-5" : "translate-x-0" }`}></span>
-              </span>
-            </label>
-          ) },
+          { key: "status", title: "Status", render: (m) => {
+            const isActive = (m.status ?? "active") === "active";
+            return (
+              <label className="inline-flex items-center cursor-pointer" aria-checked={isActive} role="switch">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={isActive}
+                  // ensure toggle is always enabled (not disabled)
+                  disabled={false}
+                  onChange={() => dispatch(toggleTeamStatus(m.id))}
+                  aria-label={`Toggle status for ${m.name}`}
+                />
+                <span className={`w-10 h-5 flex items-center rounded-full p-1 ${isActive ? "bg-green-600" : "bg-gray-300"} cursor-pointer`}>
+                  <span className={`bg-white w-4 h-4 rounded-full shadow transform transition ${isActive ? "translate-x-5" : "translate-x-0"}`}></span>
+                </span>
+              </label>
+            );
+          } },
           // add invisible helper column to set row class based on status
           { key: "__rowClass", title: "", render: (_m) => null },
-          { key: "actions", title: "Actions", render: (m) => <div className="text-right"><ActionMenu onView={() => navigate(`/dashboard/team/view/${m.id}`)} onEdit={() => onEdit(m)} onDelete={() => onDelete(m.id)} /></div> }
+          { key: "actions", title: "Actions", render: (m) => (
+            // force full opacity and pointer-events for action cell so actions stay usable for inactive rows
+            <div className="text-right opacity-100 pointer-events-auto">
+              <ActionMenu onView={() => navigate(`/dashboard/team/view/${m.id}`)} onEdit={() => onEdit(m)} onDelete={() => onDelete(m.id)} />
+            </div>
+          ) }
         ] as ColumnConfig[]}
-  rows={items.map((it) => ({ ...it, __rowClass: ((it.status ?? "active") === "active") ? "" : "opacity-50" }))}
+  // do not apply opacity to inactive rows — keep all rows visually equal and interactive
+  rows={items.map((it) => ({ ...it }))}
   pagination={{ page, pageSize, total, onPageChange: (p) => setPage(p), onPageSizeChange: (s) => { setPageSize(s); setPage(1); } }}
   sortable
   loading={loading}

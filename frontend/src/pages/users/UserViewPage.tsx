@@ -11,7 +11,9 @@ const UserViewPage: React.FC = () => {
   // Call selectors/hooks unconditionally to preserve hook order
   const currentUser = useAppSelector((s) => s.users.currentUser as any);
   const items = useAppSelector((s) => s.users.items);
-  const user = currentUser ?? items.find((u: any) => String(u.id) === String(id));
+  // Prefer the selected user by id; only use currentUser when it matches the requested id
+  const selected = items.find((u: any) => String(u.id) === String(id));
+  const user = selected ?? (currentUser && String(currentUser.id) === String(id) ? currentUser : undefined);
 
   useEffect(() => {
     if (!user && id) {
